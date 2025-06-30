@@ -184,7 +184,7 @@ def index():
                 "items": [{
                     "title": "Inscrição TLC 2025",
                     "quantity": 1,
-                    "unit_price": 100.0,
+                    "unit_price": float(os.environ.get('Preco')),
                 }],
                 "back_urls": {
                     "success": "https://ficha-tlc.onrender.com/obrigado",
