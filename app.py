@@ -162,7 +162,7 @@ def enviar_email_confirmacao(nome, telefone):
         msg = Message(
             subject="Pagamento Aprovado - TLC",
             sender="inscricao@tlc.com",
-            recipients=["devgbl34@gmail.com"]
+            recipients=["Fabiosantosnovais18@gmail.com"]
         )
         msg.body = f"Pagamento aprovado para:\nNome: {nome}\nTelefone: {telefone}"
         mail.send(msg)
