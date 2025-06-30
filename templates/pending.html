@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pagamento Pendente</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fff9e6, #ffffff);
+      color: #b38600;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      background-color: #fff;
+      padding: 40px 50px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(179, 134, 0, 0.25);
+      text-align: center;
+      border: 2px solid #b38600;
+    }
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 1px 2px rgba(179, 134, 0, 0.3);
+    }
+    p {
+      font-size: 1.2rem;
+      margin-bottom: 30px;
+      line-height: 1.4;
+    }
+    .pendingmark {
+      font-size: 6rem;
+      color: #b38600;
+      margin-bottom: 20px;
+      user-select: none;
+    }
+    a.button {
+      display: inline-block;
+      background-color: #b38600;
+      color: white;
+      padding: 14px 40px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 5px 12px rgba(179, 134, 0, 0.6);
+      transition: background-color 0.25s ease, box-shadow 0.25s ease;
+      user-select: none;
+    }
+    a.button:hover,
+    a.button:focus {
+      background-color: #7f6100;
+      box-shadow: 0 7px 18px rgba(127, 97, 0, 0.8);
+      outline: none;
+    }
+    a.button:active {
+      transform: translateY(1px);
+      box-shadow: 0 4px 10px rgba(127, 97, 0, 0.7);
+    }
+
+    /* Responsividade */
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 25px;
+      }
+      h1 {
+        font-size: 2rem;
+      }
+      p {
+        font-size: 1rem;
+      }
+      a.button {
+        font-size: 1rem;
+        padding: 12px 30px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="pendingmark">⏳</div>
+    <h1>Pagamento Pendente</h1>
+    <p>Seu pagamento está em análise.<br>Assim que for confirmado, entraremos em contato.</p>
+    <a href="/" class="button">Voltar para a página inicial</a>
+  </div>
+</body>
+</html>
