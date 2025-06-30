@@ -2,10 +2,8 @@ import os
 import traceback
 import psycopg2
 import mercadopago
-import uuid
 
 from flask import Flask, render_template, request, redirect, jsonify
-
 from flask_mail import Mail, Message
 
 app = Flask(__name__)
@@ -31,9 +29,6 @@ app.config.update(
     MAIL_USE_SSL=False
 )
 mail = Mail(app)
-
-# Cache temporário em memória (EXEMPLO) — em produção, usar Redis ou outro cache externo
-temp_cache = {}
 
 # Criação das tabelas
 def criar_tabelas():
@@ -96,7 +91,7 @@ def get_db_connection():
         password=os.environ.get('DB_PASSWORD')
     )
 
-# Função para salvar inscrição e responsáveis NO BANCO (após pagamento aprovado)
+# Salvar inscrição e responsáveis
 def salvar_inscricao(form):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -183,14 +178,8 @@ def index():
             if not form.get("nome_cursista") or not form.get("telefone_cursista"):
                 return "Nome e telefone são obrigatórios", 400
 
-            # Gerar um client_id único para associar os dados temporariamente
-            client_id = str(uuid.uuid4())
+            inscricao_id = salvar_inscricao(form)
 
-            # Salvar os dados do formulário no cache temporário
-            # Convertendo o ImmutableMultiDict para dict normal com listas
-            temp_cache[client_id] = form.to_dict(flat=False)
-
-            # Criar preferência com external_reference = client_id
             preference_data = {
                 "items": [{
                     "title": "Inscrição TLC 2025",
@@ -203,14 +192,13 @@ def index():
                     "pending": "https://ficha-tlc.onrender.com/pending"
                 },
                 "auto_return": "approved",
-                "external_reference": client_id,
+                "external_reference": str(inscricao_id),
             }
 
             preference_response = sdk.preference().create(preference_data)
             if preference_response.get("status") != 201:
                 return "Erro ao criar preferência de pagamento", 500
 
-            # Redireciona para link do Mercado Pago para pagamento
             return redirect(preference_response["response"]["init_point"])
         except Exception as e:
             print("[ERRO / POST]:", e)
@@ -237,31 +225,22 @@ def webhook():
 
             payment = payment_info["response"]
             status = payment.get("status")
-            client_id = payment.get("external_reference")
+            inscricao_id = payment.get("external_reference")
 
-            if status == "approved" and client_id:
-                # Pegar dados do cache temporário
-                form_data = temp_cache.get(client_id)
-                if form_data:
-                    # Salvar inscrição e responsáveis no banco
-                    inscricao_id = salvar_inscricao(form_data)
-                    # Atualizar pagamento
-                    atualizar_pagamento(payment_id, status, inscricao_id)
-                    # Buscar dados para email
-                    nome = form_data.get("nome_cursista")[0]
-                    telefone = form_data.get("telefone_cursista")[0]
-                    enviar_email_confirmacao(nome, telefone)
-                    # Remover do cache temporário
-                    del temp_cache[client_id]
-                else:
-                    print(f"[WEBHOOK] Dados não encontrados no cache para client_id: {client_id}")
-                    return jsonify({"error": "Dados da inscrição não encontrados"}), 400
+            if inscricao_id:
+                inscricao_id = int(inscricao_id)
+                atualizar_pagamento(payment_id, status, inscricao_id)
 
-            else:
-                # Atualizar status de pagamento mesmo que não aprovado (ex: pending, rejected)
-                # Aqui você pode tratar se quiser salvar esses status em alguma tabela
-                pass
+                if status == "approved":
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT nome, telefone FROM inscricoes WHERE id = %s", (inscricao_id,))
+                    row = cursor.fetchone()
+                    cursor.close()
+                    conn.close()
 
+                    if row:
+                        enviar_email_confirmacao(row[0], row[1])
         except Exception as e:
             print(f"[WEBHOOK ERROR]: {e}")
             traceback.print_exc()
@@ -269,7 +248,7 @@ def webhook():
 
     return jsonify({"status": "ok"}), 200
 
-
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=False)
+
